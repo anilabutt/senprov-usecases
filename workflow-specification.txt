@@ -1,0 +1,32 @@
+Usecase: What structure was followed by a given workflow execution trace? 
+
+Description: A typical understandability question to be addressed to understand the outcome of a complex scientific process.
+
+SPARQL query: 
+PREFIX senaps:<http://www.csiro.au/ontologies/senaps#>
+PREFIX rdf:<http://www.w3.org/1999/02/22-rdf-syntax-ns#>
+PREFIX provone:<http://purl.dataone.org/provone#> 
+PREFIX prov:<http://www.w3.org/ns/prov#>
+          
+CONSTRUCT {
+ ?sourceOpNode provone:hasOutPort ?outport. 
+ ?desOpNode provone:hasInport ?inport.
+ ?sourceOpNode provone:controlledBy ?controllerURI.
+ ?controllerURI provone:controls ?desOpNode.
+ ?controllerURI rdf:type provone:Controller.} 
+ WHERE {
+ <workflowExecId> senaps:hasSubProgram  ?sourceOpNode. 
+ ?sourceOpNode senaps:operatorNodeId  ?sourceOpNodeId;
+	provone:hasOutPort ?outport. 
+ ?outport senaps:portId ?outportId.
+ ?entityGen provone:hadOutPort ?outport; 
+	provone:hadEntity ?entity.
+ ?entityUsed provone:hadEntity ?entity;
+	provone:hadInPort ?inport. 
+ ?inport senaps:portId ?inportId.
+ <workflowExecId> provone:hasSubProgram  ?desOpNode. 
+ ?desOpNode provone:hasInPort ?inport;	
+	senaps:operatorNodeId  ?desOpNodeId.
+ BIND (URI(CONCAT(STR( ?sourceOpNode),\".\", 
+    STR(?outportId), \"_to_\", STR( ?desOpNodeId),
+        \".\",STR(?inportId))) AS ?controllerURI)}
